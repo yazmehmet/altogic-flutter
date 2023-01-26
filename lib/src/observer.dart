@@ -7,7 +7,7 @@ part of altogic;
 /// etc.), [AltogicState]'s context does not contain a Router. Therefore, the
 /// static Navigator.of method will not find a Navigator and will throw an
 /// error.
-class AltogicNavigatorObserver extends NavigatorObserver {
+class AltogicNavigatorObserver extends NavigatorObserver with ChangeNotifier {
   AltogicNavigatorObserver._();
 
   static final AltogicNavigatorObserver _instance =
@@ -22,23 +22,27 @@ class AltogicNavigatorObserver extends NavigatorObserver {
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPush(route, previousRoute);
     context = route.navigator?.context;
+    notifyListeners();
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPop(route, previousRoute);
     context = route.navigator?.context;
+    notifyListeners();
   }
 
   @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didRemove(route, previousRoute);
     context = route.navigator?.context;
+    notifyListeners();
   }
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
     context = newRoute?.navigator?.context;
+    notifyListeners();
   }
 }

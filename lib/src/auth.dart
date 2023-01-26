@@ -34,7 +34,12 @@ part of altogic;
 abstract class AltogicState<T extends StatefulWidget> extends State<T> {
   /// [AltogicNavigatorObserver] instance to track route changes and get the
   /// current route's context.
-  NavigatorObserver get navigatorObserver => AltogicNavigatorObserver();
+  NavigatorObserver get navigatorObserver {
+    _navigatorObserverUsed = true;
+    return AltogicNavigatorObserver();
+  }
+
+  bool _navigatorObserverUsed = false;
 
   /// This method is called when a magic link is launched.
   ///
@@ -111,8 +116,15 @@ abstract class AltogicState<T extends StatefulWidget> extends State<T> {
   /// nothing.
   void onEmailChangeLink(BuildContext? context, ChangeEmailRedirect redirect) {}
 
+  final Completer<void> _completer = Completer();
+
   void _listenInitialLinks(_LinkConfiguration configuration) async {
     var initialLink = await AppLinks().getInitialAppLink();
+
+    if (kIsWeb && _navigatorObserverUsed) {
+      await _completer.future;
+    }
+
     if (initialLink != null) {
       //_linkHandled = false;
       _handleLink(initialLink, configuration);
@@ -132,7 +144,19 @@ abstract class AltogicState<T extends StatefulWidget> extends State<T> {
         onPasswordResetLink: onPasswordResetLink,
         onOauthProviderLink: onOauthProviderLink,
         onChangeEmailLink: onEmailChangeLink));
+    AltogicNavigatorObserver().addListener(_listener);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    AltogicNavigatorObserver().removeListener(_listener);
+    super.dispose();
+  }
+
+  void _listener() {
+    if (_completer.isCompleted) return;
+    _completer.complete();
   }
 
   /// Creates [Redirect] from the route in [WidgetsApp.onGenerateInitialRoutes].

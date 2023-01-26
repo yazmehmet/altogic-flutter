@@ -1,3 +1,17 @@
+## 1.0.3
+
+- Fix: On the browser, when ``LocalizationDelegate`` was defined, `onXRedirect` methods were triggered before the context was handled. This bug has been fixed.
+
+
+## 1.0.2
+
+- ``altogic_dart`` dependency updated to ``1.0.2``
+- ``app_links`` dependency updated to ``^3.4.1``
+
+## 1.0.0
+
+- Prepared to release
+
 ## 0.0.9+17
 
 - Bug fixes
