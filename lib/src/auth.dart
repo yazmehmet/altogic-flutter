@@ -184,7 +184,10 @@ void _handleLink(Uri uri, _LinkConfiguration configuration) async {
       configuration.onEmailVerificationLink
           ?.call(context, e as EmailVerificationRedirect);
       break;
-    case RedirectAction.provider:
+    case RedirectAction.oauthSignIn:
+      configuration.onOauthProviderLink?.call(context, e as OauthRedirect);
+      break;
+    case RedirectAction.oauthSignUp:
       configuration.onOauthProviderLink?.call(context, e as OauthRedirect);
       break;
     case RedirectAction.passwordReset:
@@ -233,7 +236,8 @@ enum RedirectAction {
   passwordReset('reset-pwd'),
 
   /// Oauth provider action.
-  provider('oauth-signin'),
+  oauthSignIn('oauth-signin'),
+  oauthSignUp('oauth-signup'),
 
   /// Email change action.
   changeEmail('change-email');
@@ -263,10 +267,13 @@ abstract class Redirect {
         return PasswordResetRedirect._(uri);
       case 'oauth-signin':
         return OauthRedirect._(uri);
+      case 'oauth-signup':
+        return OauthRedirect._(uri);
       case 'change-email':
         return ChangeEmailRedirect._(uri);
     }
-    throw ArgumentError('Invalid redirect action');
+    throw ArgumentError(
+        'Invalid redirect action : ${uri.queryParameters['action']}');
   }
 
   static Redirect? _fromRoute(String? route) {
