@@ -15,34 +15,60 @@ class AltogicNavigatorObserver extends NavigatorObserver with ChangeNotifier {
 
   factory AltogicNavigatorObserver() => _instance;
 
+  final Completer<BuildContext?> _contextCompleter = Completer();
+
+  Future<BuildContext> ensureContext() async {
+    if (_context != null) {
+      return context!;
+    }
+    await _contextCompleter.future;
+    assert(
+        _context != null,
+        'Context is not available. Use navigatorObserver in your '
+        'MaterialApp and if you are using the context in '
+        'application initialization, use ensureContext() ');
+    return context!;
+  }
+
   /// Current route's context
-  BuildContext? context;
+  BuildContext? _context;
+
+  BuildContext? get context => _context;
+
+  set _setContext(BuildContext? value) {
+    if (_context != value) {
+      _context = value;
+      if (!_contextCompleter.isCompleted) {
+        _contextCompleter.complete(value);
+      }
+    }
+  }
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPush(route, previousRoute);
-    context = route.navigator?.context;
+    _setContext = route.navigator?.context;
     notifyListeners();
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPop(route, previousRoute);
-    context = route.navigator?.context;
+    _setContext = route.navigator?.context;
     notifyListeners();
   }
 
   @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didRemove(route, previousRoute);
-    context = route.navigator?.context;
+    _setContext = route.navigator?.context;
     notifyListeners();
   }
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
-    context = newRoute?.navigator?.context;
+    _setContext = newRoute?.navigator?.context;
     notifyListeners();
   }
 }

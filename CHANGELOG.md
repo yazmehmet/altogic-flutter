@@ -1,3 +1,8 @@
+## 1.0.5
+
+- New redirect actions added: `oauth-signin` , `oauth-signup`. 
+- ``AltogicState.onX`` methods `BuildContext` parameters now non-nullable.
+
 ## 1.0.3
 
 - Fix: On the browser, when ``LocalizationDelegate`` was defined, `onXRedirect` methods were triggered before the context was handled. This bug has been fixed.

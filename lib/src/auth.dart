@@ -34,7 +34,7 @@ part of altogic;
 abstract class AltogicState<T extends StatefulWidget> extends State<T> {
   /// [AltogicNavigatorObserver] instance to track route changes and get the
   /// current route's context.
-  NavigatorObserver get navigatorObserver {
+  AltogicNavigatorObserver get navigatorObserver {
     _navigatorObserverUsed = true;
     return AltogicNavigatorObserver();
   }
@@ -55,7 +55,7 @@ abstract class AltogicState<T extends StatefulWidget> extends State<T> {
   ///
   /// You can get auth grant in this method, or you can route to a new page and
   /// get auth grant on that page.
-  void onMagicLink(BuildContext? context, MagicLinkRedirect redirect) {}
+  void onMagicLink(BuildContext context, MagicLinkRedirect redirect) {}
 
   /// This method is called when an email verification link is launched.
   ///
@@ -72,7 +72,7 @@ abstract class AltogicState<T extends StatefulWidget> extends State<T> {
   /// You can get auth grant in this method, or you can route to a new page and
   /// get auth grant on that page.
   void onEmailVerificationLink(
-      BuildContext? context, EmailVerificationRedirect redirect) {}
+      BuildContext context, EmailVerificationRedirect redirect) {}
 
   /// This method is called when a password reset link is launched.
   ///
@@ -90,7 +90,7 @@ abstract class AltogicState<T extends StatefulWidget> extends State<T> {
   /// You can show the change password dialog in this method or route to a new
   /// page and change the password on the page.
   void onPasswordResetLink(
-      BuildContext? context, PasswordResetRedirect redirect) {}
+      BuildContext context, PasswordResetRedirect redirect) {}
 
   /// This method is called when an OAuth provider link is launched.
   ///
@@ -106,7 +106,7 @@ abstract class AltogicState<T extends StatefulWidget> extends State<T> {
   ///
   /// You can get auth grant in this method, or you can route to a new page and
   /// get auth grant on that page.
-  void onOauthProviderLink(BuildContext? context, OauthRedirect redirect) {}
+  void onOauthProviderLink(BuildContext context, OauthRedirect redirect) {}
 
   /// This method is called when an email change link is launched.
 
@@ -114,15 +114,28 @@ abstract class AltogicState<T extends StatefulWidget> extends State<T> {
 
   /// You can show a dialog or route to a new page to inform the user. Or
   /// nothing.
-  void onEmailChangeLink(BuildContext? context, ChangeEmailRedirect redirect) {}
+  void onEmailChangeLink(BuildContext context, ChangeEmailRedirect redirect) {}
 
   final Completer<void> _completer = Completer();
+
+  /// In the some cases, the context is not initialized when the initial link
+  /// is received. This method ensures that the context is initialized.
+  ///
+  /// Returns a [Future<BuildContext>] that completes when the context is
+  /// initialized.
+  ///
+  /// If the context is already initialized, the future completes immediately.
+  ///
+  /// If [AltogicState.navigatorObserver] is not used, the method will not work
+  /// correctly.
+  Future<BuildContext> ensureContextInitialized() =>
+      AltogicNavigatorObserver().ensureContext();
 
   void _listenInitialLinks(_LinkConfiguration configuration) async {
     var initialLink = await AppLinks().getInitialAppLink();
 
-    if (kIsWeb && _navigatorObserverUsed) {
-      await _completer.future;
+    if (_navigatorObserverUsed) {
+      await AltogicNavigatorObserver().ensureContext();
     }
 
     if (initialLink != null) {
@@ -177,7 +190,7 @@ abstract class AltogicState<T extends StatefulWidget> extends State<T> {
 
 void _handleLink(Uri uri, _LinkConfiguration configuration) async {
   if (uri.queryParameters['action'] == null) return;
-  var context = AltogicNavigatorObserver().context;
+  var context = await AltogicNavigatorObserver().ensureContext();
   var e = Redirect._factory(uri);
   switch (e.action) {
     case RedirectAction.emailConfirm:
@@ -211,16 +224,15 @@ class _LinkConfiguration {
       this.onOauthProviderLink,
       required this.onChangeEmailLink});
 
-  final void Function(BuildContext? context, MagicLinkRedirect redirect)?
+  final void Function(BuildContext context, MagicLinkRedirect redirect)?
       onMagicLink;
-  final void Function(BuildContext? context, PasswordResetRedirect redirect)?
+  final void Function(BuildContext context, PasswordResetRedirect redirect)?
       onPasswordResetLink;
-  final void Function(
-          BuildContext? context, EmailVerificationRedirect redirect)?
+  final void Function(BuildContext context, EmailVerificationRedirect redirect)?
       onEmailVerificationLink;
-  final void Function(BuildContext? context, OauthRedirect redirect)?
+  final void Function(BuildContext context, OauthRedirect redirect)?
       onOauthProviderLink;
-  final void Function(BuildContext? context, ChangeEmailRedirect redirect)?
+  final void Function(BuildContext context, ChangeEmailRedirect redirect)?
       onChangeEmailLink;
 }
 
